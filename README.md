@@ -34,9 +34,10 @@ Topics covered in this repository include:
 * Local LLMs
 * Python for AI Development
 * Real-world GenAI Projects
+> New topics, examples, and projects will be added as I continue learning.
 -->
 
-> New topics, examples, and projects will be added as I continue learning.
+
 
 ---
 
