@@ -27,7 +27,7 @@ for prompt in prompts:
 
     messages =[message]
 
-    res = client.chat.completions.create(model=model, messages=messages)
+    res = client.chat.completions.create(model=model, messages=messages, max_token=500)
     usage=res.usage
     print("-----------------------------------------")
     print(f"Prompt: {prompt}  \n--> prompt token : {usage.prompt_tokens} \n--> completion token : {usage.completion_tokens} \n--> total token : {usage.prompt_tokens + usage.prompt_tokens}")
