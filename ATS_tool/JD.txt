@@ -1,0 +1,30 @@
+Job Title: MERN Stack Developer
+Experience: 1+ Years
+Location: [Onsite / Remote / Hybrid]
+Employment Type: Full-time
+About the Role
+We are looking for a motivated MERN Stack Developer with at least 1 year of hands-on experience to join our development team. You will work on building and maintaining scalable web applications, collaborating closely with designers, product managers, and other developers.
+Key Responsibilities
+
+Develop and maintain web applications using MongoDB, Express.js, React.js, and Node.js
+Build reusable, efficient front-end components using React
+Design and implement RESTful APIs
+Write clean, maintainable, and well-documented code
+Integrate third-party APIs and services
+Optimize applications for speed, scalability, and performance
+Debug and fix bugs/issues across the stack
+Collaborate with UI/UX designers to implement responsive designs
+Participate in code reviews and team discussions
+Work with version control systems (Git/GitHub/GitLab)
+
+Required Skills
+
+1+ years of experience working with the MERN stack (MongoDB, Express.js, React.js, Node.js)
+Strong understanding of JavaScript (ES6+), HTML5, and CSS3
+Experience with React Hooks, Context API, or state management libraries (Redux/Zustand)
+Familiarity with RESTful API design and integration
+Basic understanding of MongoDB schema design and Mongoose ODM
+Experience with Node.js and Express.js for backend development
+Knowledge of Git for version control
+Understanding of asynchronous programming (Promises, async/await)
+Basic knowledge of authentication (JWT, OAuth) and security practices
