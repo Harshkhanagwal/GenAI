@@ -49,21 +49,31 @@ message_system={
 messages=[message_system]
 # Handle LLM call with message
 def callLLM(msg):
+        message_user={
+            "role" : "user",
+            "content" : msg
+        }
+        messages.append(message_user)
 
-    message_user={
-        "role" : "user",
-        "content" : msg
-    }
-    messages.append(message_user)
-    res = client.chat.completions.create(model=model, messages=messages)
+        print(f"AI : ",  end="")
 
-    reply = res.choices[0].message.content;
+        res = client.chat.completions.create(model=model, messages=messages,  stream=True)
 
-    messages.append({
-        "role" : "assistant",
-        "content" : reply
-    })
-    return reply
+        full_reply = ""
+
+        for chnk in res:
+            cotent = chnk.choices[0].delta.content
+
+            if cotent:
+                print(cotent, end="")        
+                full_reply += cotent
+        
+        print()
+                
+        messages.append({
+            "role" : "assistant",
+            "content" : full_reply
+        })
 
 
 # user input to run 
@@ -73,6 +83,7 @@ while True:
         print("See you later, friend! 👋")
         break
     else:
-        res = callLLM(msg)
-        print(f"AI : {res}")
+        # res = callLLM(msg)
+        callLLM(msg)
 
+        
