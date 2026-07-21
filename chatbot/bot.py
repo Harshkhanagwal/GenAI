@@ -46,6 +46,7 @@ message_system={
     "content": system_prompt
 }
 
+messages=[message_system]
 # Handle LLM call with message
 def callLLM(msg):
 
@@ -53,17 +54,23 @@ def callLLM(msg):
         "role" : "user",
         "content" : msg
     }
-    messages=[message_system, message_user]
-
+    messages.append(message_user)
     res = client.chat.completions.create(model=model, messages=messages)
-    return res.choices[0].message.content
+
+    reply = res.choices[0].message.content;
+
+    messages.append({
+        "role" : "assistant",
+        "content" : reply
+    })
+    return reply
 
 
 # user input to run 
 while True:
     msg = input("You : ")
     if msg.lower() == "bye":
-        print("Bye bye")
+        print("See you later, friend! 👋")
         break
     else:
         res = callLLM(msg)
