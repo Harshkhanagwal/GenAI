@@ -106,6 +106,7 @@ res = client.chat.completions.create(
     tool_choice="auto"
 )
 
-print(res)
+print("\nFinal Answer:")
+print(res.choices[0].message.content)
 
 print()
