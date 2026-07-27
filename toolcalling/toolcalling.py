@@ -6,7 +6,8 @@ import json
 
 # importing our actual tool/function
 from tools.weather import get_weather
-
+from tools.todos import create_todo
+from tools.todos import get_todo
 
 # load stuff from .env
 load_dotenv()
@@ -62,162 +63,273 @@ tools = [
                 "required": ["city"]
             }
         }
+    },
+    {
+    "type": "function",
+    "function": {
+        "name": "create_todo",
+        "description": "Create a todo item for the user and store it in the list",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "description": "Category of the todo, for example shopping or learning"
+                },
+                "task": {
+                    "type": "string",
+                    "description": "The actual todo task the user wants to store"
+                }
+            },
+            "required": ["task", "category"]
+        }
+        }
+    },
+    {
+        "type" : "function",
+        "function" : {
+            "name" : "get_todo",
+            "description" : "return all avilable todos of user"
+        }
     }
 ]
+
+system_prompt = """
+You are a friendly and conversational AI assistant with a slightly sarcastic sense of humor.
+
+Response rules:
+- Respond naturally, like a human conversation.
+- Keep responses concise by default, preferably 1-2 sentences.
+- Do not give long explanations unless the user explicitly asks for details.
+- Use light sarcasm occasionally when appropriate, but never be rude or insulting.
+- Answer the user's question directly without unnecessary information.
+- If the user asks for a detailed explanation, provide more detail as needed.
+"""
+
+
+message_system={
+    "role" :"system",
+    "content": system_prompt
+}
+
+messages = [message_system]
+
+
+while True:
+    msg = input("USER : ")
+
+    if msg == "end":
+        break
+
+    message = {
+        "role": role,
+        "content": msg
+    }
+    messages.append(message)
+
+    res = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=tools,
+        tool_choice="auto"
+    )
+
+    assistant_message = res.choices[0].message
+    tool_calls = getattr(assistant_message, "tool_calls", None)
+
+    if tool_calls:
+        print("AI : Tool call received")
+        # We're grabbing the first requested tool here.
+        tool_call = res.choices[0].message.tool_calls[0]
+
+        tool_name = tool_call.function.name
+        arguments = json.loads(tool_call.function.arguments)
+        
+
+        print("Tool:", tool_name)
+        print("Arguments:", arguments)
+
+        todo_result = ''
+
+        if tool_name == "get_weather":
+            tool_result = get_weather(arguments["city"])
+        elif tool_name == "create_todo":
+            tool_result = create_todo(arguments["category"], arguments["task"])
+        elif tool_name == "get_todo":
+            tool_result = get_todo()
+        else:
+            tool_result = "tool not found"
+        
+        messages.append(res.choices[0].message)
+        messages.append({
+            "role": "tool",
+            "tool_call_id": tool_call.id,
+            "content": json.dumps(tool_result)
+        })
+
+        res = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto"
+        )
+
+        final_message = res.choices[0].message
+
+        print("AI: " + final_message.content)
+        messages.append(final_message)
+
+    else:
+        # print("Normal response")
+        print("AI :" + assistant_message.content)
+        messages.append(assistant_message)
+
+
+
 
 
 # --------------------------------------------------
 # USER MESSAGE
 # --------------------------------------------------
 
-msg = input("Ask : ")
+# msg = input("Ask : ")
 
-message = {
-    "role": role,
-    "content": msg
-}
+# message = {
+#     "role": role,
+#     "content": msg
+# }
 
-messages = [message]
-
-
-# --------------------------------------------------
-# FIRST LLM CALL
-# --------------------------------------------------
-# We send:
-# 1. user's message
-# 2. available tools
-#
-# tool_choice="auto" means:
-# LLM decides whether it needs a tool or not
-
-res = client.chat.completions.create(
-    model=model,
-    messages=messages,
-    tools=tools,
-    tool_choice="auto"
-)
-
-print()
+# messages = [message]
 
 
-# --------------------------------------------------
-# GET THE TOOL CALL
-# --------------------------------------------------
-# If the AI decides:
-# "I need weather data"
-#
-# it returns a tool_call instead of actually calling
-# the Python function itself.
-#
-# We're grabbing the first requested tool here.
+# # --------------------------------------------------
+# # FIRST LLM CALL
+# # --------------------------------------------------
+# # We send:
+# # 1. user's message
+# # 2. available tools
+# #
+# # tool_choice="auto" means:
+# # LLM decides whether it needs a tool or not
 
-tool_call = res.choices[0].message.tool_calls[0]
+# res = client.chat.completions.create(
+#     model=model,
+#     messages=messages,
+#     tools=tools,
+#     tool_choice="auto"
+# )
 
-print("\nTool Call:")
-print(tool_call)
-
-
-# --------------------------------------------------
-# GET ARGUMENTS GENERATED BY AI
-# --------------------------------------------------
-# arguments usually comes back as a JSON STRING
-#
-# something like:
-# '{"city":"Bhopal"}'
-
-arguments = tool_call.function.arguments
+# print()
 
 
-# convert JSON string -> Python dictionary
-#
-# '{"city":"Bhopal"}'
-# becomes
-# {"city": "Bhopal"}
+# # --------------------------------------------------
+# # GET THE TOOL CALL
+# # --------------------------------------------------
+# # If the AI decides:
+# # "I need weather data"
+# #
+# # it returns a tool_call instead of actually calling
+# # the Python function itself.
+# #
+# # We're grabbing the first requested tool here.
 
-arguments = json.loads(arguments)
+# tool_call = res.choices[0].message.tool_calls[0]
 
-print("\nArguments:")
-print(arguments)
-
-
-# --------------------------------------------------
-# ACTUALLY RUN THE TOOL
-# --------------------------------------------------
-# THIS is where our Python function actually runs.
-#
-# Important idea:
-# LLM asked us to call the tool.
-# Our Python code is the one actually calling it.
-
-tool_result = get_weather(arguments["city"])
-
-print("\nTool Result:")
-print(tool_result)
+# print("\nTool Call:")
+# print(tool_call)
 
 
-# --------------------------------------------------
-# SAVE AI'S TOOL REQUEST IN MESSAGE HISTORY
-# --------------------------------------------------
-# We need this because the next LLM call needs to know:
-# "oh yeah, I requested this tool earlier"
+# # --------------------------------------------------
+# # GET ARGUMENTS GENERATED BY AI
+# # --------------------------------------------------
+# # arguments usually comes back as a JSON STRING
+# #
+# # something like:
+# # '{"city":"Bhopal"}'
 
-messages.append(res.choices[0].message)
-
-
-print("\nTool Call ID:")
-print(tool_call.id)
+# arguments = tool_call.function.arguments
 
 
-print("\nMessages:")
-print(messages)
+# # convert JSON string -> Python dictionary
+# #
+# # '{"city":"Bhopal"}'
+# # becomes
+# # {"city": "Bhopal"}
+
+# arguments = json.loads(arguments)
+
+# print("\nArguments:")
+# print(arguments)
 
 
-# --------------------------------------------------
-# GIVE TOOL RESULT BACK TO THE AI
-# --------------------------------------------------
-# Now we're saying:
-#
-# "here's the result of the tool you asked for"
-#
-# tool_call_id connects this result with the
-# exact tool request the AI made.
+# # --------------------------------------------------
+# # ACTUALLY RUN THE TOOL
+# # --------------------------------------------------
+# # THIS is where our Python function actually runs.
+# #
+# # Important idea:
+# # LLM asked us to call the tool.
+# # Our Python code is the one actually calling it.
 
-messages.append({
-    "role": "tool",
-    "tool_call_id": tool_call.id,
-    "content": json.dumps(tool_result)
-})
+# tool_result = get_weather(arguments["city"])
 
-print(messages)
+# print("\nTool Result:")
+# print(tool_result)
 
 
-# --------------------------------------------------
-# SECOND LLM CALL
-# --------------------------------------------------
-# Now the AI has:
-#
-# user question
-#      ↓
-# its own tool request
-#      ↓
-# actual tool result
-#
-# So now it can use that data to generate
-# a normal human-readable answer.
+# # --------------------------------------------------
+# # SAVE AI'S TOOL REQUEST IN MESSAGE HISTORY
+# # --------------------------------------------------
+# # We need this because the next LLM call needs to know:
+# # "oh yeah, I requested this tool earlier"
 
-res = client.chat.completions.create(
-    model=model,
-    messages=messages,
-    tools=tools,
-    tool_choice="auto"
-)
+# messages.append(res.choices[0].message)
 
 
-# --------------------------------------------------
-# FINAL ANSWER
-# --------------------------------------------------
+# print("\nTool Call ID:")
+# print(tool_call.id)
 
-print("\nFinal Answer:")
-print(res.choices[0].message.content)
 
-print()
+# print("\nMessages:")
+# print(messages)
+
+
+# messages.append({
+#     "role": "tool",
+#     "tool_call_id": tool_call.id,
+#     "content": json.dumps(tool_result)
+# })
+
+# print(messages)
+
+
+# # --------------------------------------------------
+# # SECOND LLM CALL
+# # --------------------------------------------------
+# # Now the AI has:
+# #
+# # user question
+# #      ↓
+# # its own tool request
+# #      ↓
+# # actual tool result
+# #
+# # So now it can use that data to generate
+# # a normal human-readable answer.
+
+# res = client.chat.completions.create(
+#     model=model,
+#     messages=messages,
+#     tools=tools,
+#     tool_choice="auto"
+# )
+
+
+# # --------------------------------------------------
+# # FINAL ANSWER
+# # --------------------------------------------------
+
+# print("\nFinal Answer:")
+# print(res.choices[0].message.content)
+
+# print()
