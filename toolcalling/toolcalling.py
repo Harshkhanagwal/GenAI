@@ -27,6 +27,15 @@ model = "llama-3.3-70b-versatile"
 role = "user"
 
 
+
+available_tools = {
+    "get_weather": get_weather,
+    "create_todo": create_todo,
+    "get_todo": get_todo
+}
+
+
+
 # --------------------------------------------------
 # TOOL DEFINITION
 # --------------------------------------------------
@@ -39,6 +48,7 @@ role = "user"
 # - tool name
 # - what it does
 # - what arguments it needs
+
 
 tools = [
     {
@@ -147,18 +157,25 @@ while True:
         
 
         print("Tool:", tool_name)
+        arguments = arguments or {}
         print("Arguments:", arguments)
 
-        todo_result = ''
 
-        if tool_name == "get_weather":
-            tool_result = get_weather(arguments["city"])
-        elif tool_name == "create_todo":
-            tool_result = create_todo(arguments["category"], arguments["task"])
-        elif tool_name == "get_todo":
-            tool_result = get_todo()
+        selected_function = available_tools.get(tool_name)
+
+        if selected_function:
+            tool_result = selected_function(**arguments)
         else:
-            tool_result = "tool not found"
+            tool_result = "Tool not found"
+
+        # if tool_name == "get_weather":
+        #     tool_result = get_weather(arguments["city"])
+        # elif tool_name == "create_todo":
+        #     tool_result = create_todo(arguments["category"], arguments["task"])
+        # elif tool_name == "get_todo":
+        #     tool_result = get_todo()
+        # else:
+        #     tool_result = "tool not found"
         
         messages.append(res.choices[0].message)
         messages.append({
