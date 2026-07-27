@@ -149,41 +149,39 @@ while True:
 
     if tool_calls:
         print("AI : Tool call received")
-        # We're grabbing the first requested tool here.
-        tool_call = res.choices[0].message.tool_calls[0]
 
-        tool_name = tool_call.function.name
-        arguments = json.loads(tool_call.function.arguments)
-        
+        # Store assistant message containing ALL tool calls
+        messages.append(assistant_message)
 
-        print("Tool:", tool_name)
-        arguments = arguments or {}
-        print("Arguments:", arguments)
+        # Loop through every tool call
+        for tool_call in tool_calls:
 
+            tool_name = tool_call.function.name
+            arguments = json.loads(tool_call.function.arguments)
+            arguments = arguments or {}
 
-        selected_function = available_tools.get(tool_name)
+            print("Tool:", tool_name)
+            print("Arguments:", arguments)
 
-        if selected_function:
-            tool_result = selected_function(**arguments)
-        else:
-            tool_result = "Tool not found"
+            # Find the actual Python function
+            selected_function = available_tools.get(tool_name)
 
-        # if tool_name == "get_weather":
-        #     tool_result = get_weather(arguments["city"])
-        # elif tool_name == "create_todo":
-        #     tool_result = create_todo(arguments["category"], arguments["task"])
-        # elif tool_name == "get_todo":
-        #     tool_result = get_todo()
-        # else:
-        #     tool_result = "tool not found"
-        
-        messages.append(res.choices[0].message)
-        messages.append({
-            "role": "tool",
-            "tool_call_id": tool_call.id,
-            "content": json.dumps(tool_result)
-        })
+            # Execute tool
+            if selected_function:
+                tool_result = selected_function(**arguments)
+            else:
+                tool_result = "Tool not found"
 
+            print("Tool Result:", tool_result)
+
+            # Add result of THIS tool call
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(tool_result)
+            })
+
+        # After ALL tools have finished, send results back to LLM
         res = client.chat.completions.create(
             model=model,
             messages=messages,
