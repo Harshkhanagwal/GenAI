@@ -41,120 +41,161 @@ You are Timy, a friendly, witty, and fun AI chatbot.
 # Your name is Timy.
 
 
-message_system={
+message_system_org={
     "role":"system",
     "content": system_prompt
 }
 
-messages=[message_system]
+message_system = {
+    "role": "system",
+    "content": "You are a helpful AI assistant."
+}
+
+messages = [message_system]
+
+
+
 conversation_summary = ""
 
+last_summarized_count = 0
 
-messages = [
-    message_system,
+window_size = 10
 
-    {"role": "user", "content": "Hi"},
-    {"role": "assistant", "content": "Hello! How can I help you?"},
+summary_every = 10
 
-    {"role": "user", "content": "I'm building an ecommerce website."},
-    {"role": "assistant", "content": "Great! Which tech stack are you using?"},
-
-    {"role": "user", "content": "I'm using MERN."},
-    {"role": "assistant", "content": "Nice choice. MERN is great for full-stack development."},
-
-    {"role": "user", "content": "Now I'm learning AI."},
-    {"role": "assistant", "content": "Awesome! What topic are you learning?"},
-
-    {"role": "user", "content": "Context and memory management."},
-    {"role": "assistant", "content": "That's an important concept in LLM applications."}
-]
 
 
 # basic window approch for context managment 
-def get_context(messages, window_size=5):
+def get_context_basic_window(messages, window_size):
    
     context = [message_system]
     context.extend(messages[1:][-window_size:])
     
     return context
 
+
+
 # function to split the who msg array 
-def split_messages(messages, window_size=5):
+def split_messages(messages, window_size):
     conversation = messages[1:]
     old_msg  = conversation[:-window_size]
     recent_msg = conversation[-window_size:]
 
     return old_msg, recent_msg
 
+#summarize old msg with LLM
 def summarize_messages(old_msg):
     print("summarizing")
-    for msg in old_msg:
-        print(msg)
-
+   
     summarize_system={
         "role":"system",
         "content": """ 
             You are a conversation summarizer.
-            Summarize the important facts from the conversation.
-            Keep names, decisions, preferences and unresolved tasks.
-            Do not add information that isn't present.
+            Return ONLY a concise factual summary.
+
+            Include:
+            - names
+            - preferences
+            - decisions
+            - important facts
+            - unresolved tasks
+
+            Do NOT ask questions.
+            Do NOT greet the user.
+            Do NOT continue the conversation.
+            Do NOT add explanations.
+
+            Output only the summary.
         """
     }
     tmpMsg = [summarize_system]
-    tmpMsg.extend(old)
+    tmpMsg.extend(old_msg)
 
 
     res = client.chat.completions.create(model=model, messages=tmpMsg)
+
+    print(res)
+
+
     summary = res.choices[0].message.content
+
+    print(summary)
 
     return summary
 
+
+def get_context_with_summary(summary, recent):
+
+    context = [message_system]
+
+    context.append({
+        "role": "system",
+        "content": f"Summary: {summary}"
+    })
+
+
+    context.extend(recent)
+
+    return context
+
 # Handle LLM call with message
 def callLLM(msg):
+        global conversation_summary
+        global last_summarized_count    
         message_user={
             "role" : "user",
             "content" : msg
         }
         messages.append(message_user)
 
+        msgs = messages
 
-        print()
-        print("------------------------------------------------------------------------------------------------------")
+        old, recent = split_messages(messages, window_size)
         
-        
-        print("\nCONTEXT SENT TO LLM:")
-        for message in get_context(messages):
-            print(message["role"], ":", message["content"])
-        print()
-        print("------------------------------------------------------------------------------------------------------")
+        old_count = len(old)
+
+        new_old_messages = old_count - last_summarized_count
+
+        if new_old_messages >= summary_every:
+            conversation_summary = summarize_messages(old)
+            last_summarized_count = old_count
+            msgs = get_context_with_summary(conversation_summary, recent)        
+        print("\n----- SUMMARY -----")
+        print( "=" + conversation_summary)
+        print("-------------------\n")
 
         print()
 
         print(f"AI : ",  end="")
-
-        res = client.chat.completions.create(model=model, messages=get_context(messages),  stream=True)
+        res = client.chat.completions.create(model=model, messages=msgs,  stream=True)
 
         full_reply = ""
 
         for chnk in res:
-            cotent = chnk.choices[0].delta.content
+            content = chnk.choices[0].delta.content
 
-            if cotent:
-                print(cotent, end="")        
-                full_reply += cotent
+            if content:
+                print(content, end="")        
+                full_reply += content
 
-        print()
+        print()                      
 
-      
-                
         messages.append({
             "role" : "assistant",
             "content" : full_reply
         })
 
 
+        # print()
+        # print("------------------------------------------------------------------------------------------------------")        
+        # print("\nCONTEXT SENT TO LLM:")
+        # for message in msgs:
+        #     print(message["role"], ":", message["content"])
+        # print()
+        # print("------------------------------------------------------------------------------------------------------")
+
 # user input to run 
-while False:
+while True:
     msg = input("You : ")
     if msg.lower() == "bye":
         print("See you later, friend! 👋")
@@ -166,7 +207,7 @@ while False:
 
 
 # # testing the split_messages function
-old, recent = split_messages(messages)
+# old, recent = split_messages(messages)
 
 # print("OLD MESSAGES")
 # for msg in old:
@@ -176,6 +217,6 @@ old, recent = split_messages(messages)
 # for msg in recent:
 #     print(msg)
 
-summarize_messages(old)
+# summarize_messages(old)
 
         
