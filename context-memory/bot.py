@@ -47,16 +47,68 @@ message_system={
 }
 
 messages=[message_system]
+conversation_summary = ""
 
+
+messages = [
+    message_system,
+
+    {"role": "user", "content": "Hi"},
+    {"role": "assistant", "content": "Hello! How can I help you?"},
+
+    {"role": "user", "content": "I'm building an ecommerce website."},
+    {"role": "assistant", "content": "Great! Which tech stack are you using?"},
+
+    {"role": "user", "content": "I'm using MERN."},
+    {"role": "assistant", "content": "Nice choice. MERN is great for full-stack development."},
+
+    {"role": "user", "content": "Now I'm learning AI."},
+    {"role": "assistant", "content": "Awesome! What topic are you learning?"},
+
+    {"role": "user", "content": "Context and memory management."},
+    {"role": "assistant", "content": "That's an important concept in LLM applications."}
+]
+
+
+# basic window approch for context managment 
 def get_context(messages, window_size=5):
-    # 1. preserve the system message
-    # 2. get the last `window_size` conversation messages
-    # 3. combine them
-    # 4. return the new list
+   
     context = [message_system]
     context.extend(messages[1:][-window_size:])
     
     return context
+
+# function to split the who msg array 
+def split_messages(messages, window_size=5):
+    conversation = messages[1:]
+    old_msg  = conversation[:-window_size]
+    recent_msg = conversation[-window_size:]
+
+    return old_msg, recent_msg
+
+def summarize_messages(old_msg):
+    print("summarizing")
+    for msg in old_msg:
+        print(msg)
+
+    summarize_system={
+        "role":"system",
+        "content": """ 
+            You are a conversation summarizer.
+            Summarize the important facts from the conversation.
+            Keep names, decisions, preferences and unresolved tasks.
+            Do not add information that isn't present.
+        """
+    }
+    tmpMsg = [summarize_system]
+    tmpMsg.extend(old)
+
+
+    res = client.chat.completions.create(model=model, messages=tmpMsg)
+    summary = res.choices[0].message.content
+
+    return summary
+
 # Handle LLM call with message
 def callLLM(msg):
         message_user={
@@ -101,11 +153,8 @@ def callLLM(msg):
         })
 
 
-
-
-
 # user input to run 
-while True:
+while False:
     msg = input("You : ")
     if msg.lower() == "bye":
         print("See you later, friend! 👋")
@@ -113,5 +162,20 @@ while True:
     else:
         # res = callLLM(msg)
         callLLM(msg)
+
+
+
+# # testing the split_messages function
+old, recent = split_messages(messages)
+
+# print("OLD MESSAGES")
+# for msg in old:
+#     print(msg)
+
+# print("\nRECENT MESSAGES")
+# for msg in recent:
+#     print(msg)
+
+summarize_messages(old)
 
         
