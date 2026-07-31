@@ -1,0 +1,135 @@
+AI Engineering Notes
+
+Embeddings
+
+Why Embeddings?
+
+LLMs cannot read thousands of documents every time a user asks a
+question. Instead, documents are converted into numerical
+representations (vectors) so they can be searched efficiently.
+
+What is an Embedding?
+
+An embedding is a numerical vector that represents the meaning of a
+piece of text.
+
+Example: “I love dogs.” ↓ [0.12, -0.87, 0.44, …]
+
+Texts with similar meaning produce vectors that are close together.
+
+LLM vs Embedding Model
+
+LLM - Input: Text - Output: Text - Job: Generate responses.
+
+Embedding Model - Input: Text - Output: Vector - Job: Convert meaning
+into numbers.
+
+RAG Pipeline
+
+Documents ↓ Embedding Model ↓ Document Vectors ↓ Vector Database
+
+User Question ↓ Embedding Model ↓ Question Vector ↓ Similarity Search ↓
+Top-k Relevant Chunks ↓ LLM ↓ Final Answer
+
+Why store embeddings?
+
+Document embeddings are generated once and stored. For every new user
+query, only the query is embedded.
+
+If a document changes: - Recreate its embedding. - Replace the old
+vector in the vector database.
+
+Why not embed an entire PDF?
+
+A single vector would represent many unrelated topics. Retrieval becomes
+less accurate. Solution: Split documents into chunks first.
+
+------------------------------------------------------------------------
+
+Chunking
+
+Why Chunking?
+
+Instead of embedding an entire document, split it into smaller
+meaningful pieces.
+
+Benefits: - Better retrieval - More focused embeddings - Better answers
+
+Problems
+
+Too Small - Loses context. - Related information may end up in different
+chunks.
+
+Too Large - Contains multiple topics. - Embedding becomes too general.
+
+Ideal Chunk - Covers one coherent topic. - Contains enough context. -
+Avoids unrelated information.
+
+Chunk Overlap
+
+Purpose: Preserve context between neighboring chunks.
+
+Example
+
+Chunk 1 A B C D
+
+Chunk 2 C D E F
+
+“C D” is the overlap.
+
+Too little overlap: - Context loss
+
+Too much overlap: - Duplicate data - Higher storage - Higher embedding
+cost - Similar retrieval results
+
+Chunk Size
+
+Example: Chunk Size = 500 tokens Overlap = 100 tokens
+
+Chunk 1 1–500
+
+Chunk 2 401–900
+
+The last 100 tokens of Chunk 1 appear at the beginning of Chunk 2.
+
+Tokens vs Characters
+
+LLMs process tokens, not characters.
+
+Therefore production systems define chunk sizes using tokens.
+
+Example: - Chunk Size = 512 tokens - Overlap = 64 tokens
+
+Chunking Strategies
+
+1.  Fixed-size Chunking
+
+-   Split every N tokens.
+-   Fast and simple.
+-   May split related ideas.
+
+2.  Recursive Chunking
+
+-   Prefer headings.
+-   Then paragraphs.
+-   Then sentences.
+-   Then words/tokens if necessary.
+-   Most commonly used.
+
+3.  Semantic Chunking
+
+-   Split when the topic changes.
+-   Produces highly meaningful chunks.
+
+Key Interview Points
+
+-   Embeddings represent meaning, not words.
+-   Similar meanings produce nearby vectors.
+-   Store document embeddings; embed only user queries at runtime.
+-   Entire PDFs should not be embedded as one vector.
+-   Chunking improves retrieval quality.
+-   Chunks should be neither too small nor too large.
+-   Overlap preserves context.
+-   Chunk sizes are typically measured in tokens.
+-   Recursive chunking is popular because it preserves natural document
+    structure.
