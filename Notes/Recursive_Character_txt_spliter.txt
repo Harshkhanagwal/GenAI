@@ -1,0 +1,281 @@
+============================================================
+RECURSIVE CHARACTER TEXT SPLITTER
+============================================================
+
+WHAT IS RECURSIVE CHUNKING?
+
+Recursive chunking tries to preserve natural text structure while
+keeping chunks within the desired chunk size.
+
+Instead of blindly cutting text every N characters/tokens, it tries
+larger meaningful boundaries first.
+
+Conceptually:
+
+Paragraph
+   ↓ if too large
+Line
+   ↓ if too large
+Word
+   ↓ if too large
+Character
+
+
+------------------------------------------------------------
+WHY IS IT CALLED "RECURSIVE"?
+------------------------------------------------------------
+
+Because the splitter keeps trying smaller separators when the
+current piece of text is still too large.
+
+Example:
+
+Try "\n\n" → Paragraph boundary
+      ↓ still too large
+
+Try "\n"   → Line boundary
+      ↓ still too large
+
+Try " "    → Word boundary
+      ↓ still too large
+
+Try ""     → Character boundary
+
+
+Interview Definition:
+
+RecursiveCharacterTextSplitter recursively tries smaller separators
+until the text can fit within the desired chunk size.
+
+
+------------------------------------------------------------
+DEFAULT SEPARATORS
+------------------------------------------------------------
+
+Conceptually:
+
+["\n\n", "\n", " ", ""]
+
+Meaning:
+
+"\n\n" → Paragraph boundary
+"\n"   → Line boundary
+" "    → Word boundary
+""     → Character boundary
+
+The splitter prefers the earlier separators because they preserve
+more natural text structure.
+
+
+------------------------------------------------------------
+IMPORTANT BEHAVIOR
+------------------------------------------------------------
+
+Finding a separator DOES NOT mean every separated piece automatically
+becomes one chunk.
+
+Example:
+
+chunk_size = 100
+
+Paragraph A = 40 characters
+Paragraph B = 30 characters
+Paragraph C = 50 characters
+
+The splitter can combine smaller pieces:
+
+Chunk 1:
+Paragraph A + Paragraph B
+≈ 70 characters
+
+Adding Paragraph C would exceed the chunk size.
+
+Therefore:
+
+Chunk 2:
+Paragraph C
+
+
+------------------------------------------------------------
+THREE IMPORTANT SETTINGS
+------------------------------------------------------------
+
+1. chunk_size
+
+Controls the target maximum size of each chunk.
+
+Example:
+
+chunk_size = 500
+
+
+2. chunk_overlap
+
+Controls how much previous content is retained between neighboring
+chunks to help preserve context.
+
+Example:
+
+chunk_size = 500
+chunk_overlap = 100
+
+
+3. separators
+
+Controls WHERE the splitter prefers to break the text.
+
+Example:
+
+["\n\n", "\n", " ", ""]
+
+
+Easy Mental Model:
+
+chunk_size
+→ How large should my chunks be?
+
+chunk_overlap
+→ How much previous context should I retain?
+
+separators
+→ Where should I preferably split the text?
+
+
+------------------------------------------------------------
+WHY NOT ALWAYS USE SMALL CHUNKS?
+------------------------------------------------------------
+
+Too-small chunks can break related information apart.
+
+Example:
+
+Chunk 1:
+Python was created by Guido van Rossum.
+
+Chunk 2:
+Python is widely used in AI.
+
+A question requiring both facts may need multiple chunks.
+
+
+------------------------------------------------------------
+WHY NOT ALWAYS USE LARGE CHUNKS?
+------------------------------------------------------------
+
+Large chunks can contain many unrelated topics.
+
+This makes the embedding less focused and can reduce retrieval quality.
+
+
+------------------------------------------------------------
+CHOOSING CHUNK SIZE
+------------------------------------------------------------
+
+There is NO universal perfect chunk size.
+
+Bad:
+
+"Always use 500 tokens."
+
+The correct chunk size depends on:
+
+- Document structure
+- Amount of context needed
+- Type of information
+- Types of user questions
+- Embedding model
+- Retrieval strategy
+
+
+Example:
+
+Legal contracts
+→ May require larger chunks because clauses can be long and depend
+  on surrounding context.
+
+FAQ documents
+→ Can often use smaller chunks because each question/answer may
+  already be self-contained.
+
+
+------------------------------------------------------------
+KEY IDEA
+------------------------------------------------------------
+
+RecursiveCharacterTextSplitter tries to:
+
+KEEP RELATED INFORMATION TOGETHER
+
+while also:
+
+KEEPING CHUNKS WITHIN THE DESIRED SIZE.
+
+
+------------------------------------------------------------
+INTERVIEW QUICK REVISION
+------------------------------------------------------------
+
+Q: Why use RecursiveCharacterTextSplitter?
+
+A:
+It preserves natural text boundaries better than blindly splitting
+at fixed positions.
+
+
+Q: Why is it called recursive?
+
+A:
+It progressively tries smaller separators when a piece of text is
+still too large.
+
+
+Q: What does chunk_size control?
+
+A:
+The target maximum size of the resulting chunks.
+
+
+Q: What does chunk_overlap control?
+
+A:
+How much previous context is retained between neighboring chunks.
+
+
+Q: What do separators control?
+
+A:
+Where the splitter prefers to break the text.
+
+
+Q: Is there one perfect chunk size for every RAG application?
+
+A:
+No. Chunk size depends on the documents, queries, context requirements,
+embedding model, and retrieval strategy.
+
+
+------------------------------------------------------------
+MENTAL MODEL
+------------------------------------------------------------
+
+Document
+   ↓
+Try natural boundaries
+   ↓
+Is piece too large?
+   ↓ YES
+Use smaller separator
+   ↓
+Repeat if necessary
+   ↓
+Combine pieces within chunk_size
+   ↓
+Apply overlap
+   ↓
+Final Chunks
+   ↓
+Embedding Model
+   ↓
+Vectors
+   ↓
+Vector Store
