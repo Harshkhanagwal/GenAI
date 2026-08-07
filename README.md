@@ -48,7 +48,7 @@ This repository documents my hands-on journey of learning Generative AI, from ba
 * [x] External API Integration
 * [ ] Tool Error Handling
 * [ ] Embeddings
-* [ ] Vector Databases
+* [x] Vector Databases
 * [ ] RAG
 * [ ] AI Memory
 * [ ] AI Agents
