@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenAI Learning Roadmap</title>
+<style>
+:root{color-scheme:dark;--bg:#111411;--panel:#191e19;--panel-2:#202720;--border:#303a30;--text:#edf2e9;--muted:#a0aca0;--accent:#b5e66b;--accent-ink:#1b2610;--shadow:0 18px 55px rgba(0,0,0,.22)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 12% 0%,rgba(181,230,107,.08),transparent 34rem),var(--bg);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{width:min(980px,calc(100% - 32px));margin:0 auto;padding:48px 0 64px}
+header{margin-bottom:28px}.eyebrow{color:var(--accent);text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;font-weight:800}
+h1{font-size:clamp(2rem,5vw,3.25rem);letter-spacing:-.045em;line-height:1.08;margin:10px 0 12px}.intro{max-width:660px;color:var(--muted);margin:0}
+.progress-card{background:linear-gradient(135deg,#202820,#181d18);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow);margin:28px 0 22px}
+.progress-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}.progress-title{font-weight:750;font-size:1.05rem}.progress-count{color:var(--muted);font-size:.88rem;margin-top:3px}.percent{font-size:1.8rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.track{height:9px;border-radius:99px;overflow:hidden;background:#303930}.bar{height:100%;width:0;background:var(--accent);border-radius:inherit;transition:width .25s ease}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:22px 0}.filters,.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,select{color:var(--text);background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font:inherit;cursor:pointer}
+button:hover,select:hover{border-color:#687a60}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.filter.active{color:var(--accent);border-color:#667c4b;background:#263222}.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:750}.primary:hover{background:#c5ef86}
+.phase{border:1px solid var(--border);background:rgba(25,30,25,.92);border-radius:18px;margin:14px 0;overflow:hidden}
+.phase-head{width:100%;border:0;border-radius:0;background:transparent;padding:18px 20px;display:flex;align-items:center;gap:14px;text-align:left}
+.phase-num{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:12px;background:#2b3528;color:var(--accent);font-weight:800}
+.phase-heading{flex:1;min-width:0}.phase-heading strong{display:block;font-size:1rem}.phase-meta{display:block;color:var(--muted);font-size:.82rem;margin-top:3px}
+.phase-progress{color:var(--muted);white-space:nowrap;font-size:.82rem}.chevron{color:var(--muted);transition:transform .2s}.phase.collapsed .chevron{transform:rotate(-90deg)}
+.phase-body{padding:0 20px 18px 72px}.phase.collapsed .phase-body{display:none}
+.task{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid rgba(48,58,48,.65);cursor:pointer}
+.task input{accent-color:var(--accent);width:17px;height:17px;margin:3px 0 0;flex:0 0 auto;cursor:pointer}.task span{flex:1}.task.done span{color:#879487;text-decoration:line-through}
+.footer-note{color:var(--muted);text-align:center;font-size:.85rem;margin-top:28px}.empty{display:none;text-align:center;color:var(--muted);padding:28px}
+@media(max-width:600px){.shell{width:calc(100% - 20px);padding-top:30px}.progress-card{padding:17px}.phase-head{padding:15px;gap:10px}.phase-num{flex-basis:34px;height:34px}.phase-body{padding:0 15px 15px}.phase-progress{display:none}.toolbar{align-items:stretch}.filters,.actions{width:100%}.actions button{flex:1}}
+@media print{:root{color-scheme:light;--bg:#fff;--panel:#fff;--panel-2:#fff;--border:#ccc;--text:#111;--muted:#555;--accent:#4c6e1c}body{background:#fff;color:#111}.shell{width:100%;padding:0}.toolbar,.footer-note{display:none}.phase{break-inside:avoid;background:#fff}.phase.collapsed .phase-body{display:block}.task.done span{color:#666}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header>
+<div class="eyebrow">Learning roadmap · Python + Groq</div>
+<h1>GenAI Study Assistant</h1>
+<p class="intro">A practical checklist for learning LangChain, building a mini-project, and progressing to LangGraph, RAG, and production practices. Tick items as you complete and test them.</p>
+</header>
+<section class="progress-card" aria-label="Overall progress">
+<div class="progress-top"><div><div class="progress-title">Your learning progress</div><div class="progress-count" id="progressCount">0 of 39 tasks completed</div></div><div class="percent" id="percent">0%</div></div>
+<div class="track" role="progressbar" aria-label="Learning progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="bar" id="progressBar"></div></div>
+</section>
+<div class="toolbar">
+<div class="filters" aria-label="Task filters"><button class="filter active" data-filter="all">All tasks</button><button class="filter" data-filter="todo">Remaining</button><button class="filter" data-filter="done">Completed</button></div>
+<div class="actions"><button id="expandAll">Expand all</button><button id="collapseAll">Collapse all</button><button id="reset">Reset progress</button><button class="primary" id="print">Print</button></div>
+</div>
+<div id="roadmap"></div><div class="empty" id="empty">No tasks match this filter.</div>
+<p class="footer-note">Progress is saved automatically in this browser on this device.</p>
+</main>
+<script>
+const phases = [
+  {title:"Phase 1 — LangChain Fundamentals",description:"Set up the project and learn the core model and prompt APIs.",tasks:[
+    "Set up the project with uv, Groq, and environment variables",
+    "Build a terminal chatbot using ChatGroq and invoke()",
+    "Understand SystemMessage, HumanMessage, and AIMessage",
+    "Create reusable prompts with PromptTemplate and ChatPromptTemplate",
+    "Generate structured output with Pydantic",
+    "Implement streaming with stream()",
+    "Learn asynchronous calls with ainvoke() and astream()"
+  ]},
+  {title:"Phase 2 — Assistant Features",description:"Add history, tools, and reusable workflows.",tasks:[
+    "Implement conversation history",
+    "Distinguish conversation history from persistent memory",
+    "Define custom Python tools",
+    "Learn bind_tools() and tool-call schemas",
+    "Execute tools and return ToolMessage results",
+    "Build the complete model–tool–model loop",
+    "Learn Runnable, LCEL, and the pipe operator",
+    "Compose multi-step chains and output parsers"
+  ]},
+  {title:"Phase 3 — LangGraph",description:"Build stateful workflows and agent-like systems before adding RAG.",tasks:[
+    "Understand graphs, nodes, edges, and state",
+    "Build a StateGraph with START and END",
+    "Use conditional routing",
+    "Implement loops and state reducers",
+    "Integrate tools into graph workflows",
+    "Add checkpointing and persistent state",
+    "Implement interrupts and human approval",
+    "Stream graph execution",
+    "Build a complete stateful study agent"
+  ]},
+  {title:"Phase 4 — RAG and Documents",description:"Let the assistant answer questions using external documents; later integrate retrieval into a graph.",tasks:[
+    "Load documents from files",
+    "Split documents into chunks",
+    "Generate embeddings",
+    "Store and search vectors",
+    "Build a retriever",
+    "Create a RAG question-answering workflow",
+    "Add source citations and metadata filtering"
+  ]},
+  {title:"Phase 5 — Reliability and Production",description:"Make the project testable, observable, and more robust.",tasks:[
+    "Handle exceptions, retries, and timeouts",
+    "Handle rate limits and API failures",
+    "Add tracing and inspect executions",
+    "Measure token usage, latency, and cost",
+    "Write tests for prompts, tools, and chains",
+    "Evaluate answer quality and grounding",
+    "Add logging and configuration",
+    "Refactor the assistant into clean modules"
+  ]}
+];
+const STORAGE_KEY = "genai-study-assistant-roadmap-v1";
+const LEGACY_PHASES = [
+  phases[0],
+  phases[1],
+  {title:"Phase 3 — RAG and Documents",tasks:["Load documents from files","Split documents into chunks","Generate embeddings","Store and search vectors","Build a retriever","Create a RAG question-answering workflow","Add source citations and metadata filtering"]},
+  {title:"Phase 4 — Reliability and Production",tasks:["Handle exceptions, retries, and timeouts","Handle rate limits and API failures","Add tracing and inspect executions","Measure token usage, latency, and cost","Write tests for prompts, tools, and chains","Evaluate answer quality and grounding","Add logging and configuration","Refactor the assistant into clean modules"]},
+  {title:"Phase 5 — LangGraph",tasks:["Understand graphs, nodes, edges, and state","Build a StateGraph with START and END","Use conditional routing","Implement loops and state reducers","Integrate tools into graph workflows","Add checkpointing and persistent state","Implement interrupts and human approval","Stream graph execution","Build a complete stateful study agent"]}
+];
+function loadProgress(){
+  try {
+    const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+    if(!Array.isArray(saved)) return new Set();
+    // Migrate saved index-based IDs from the previous phase order to the reordered roadmap.
+    const oldTasks=new Map();
+    LEGACY_PHASES.forEach((phase,pi)=>phase.tasks.forEach((task,ti)=>oldTasks.set(`${pi}-${ti}`,task)));
+    const newIds=new Map();
+    phases.forEach((phase,pi)=>phase.tasks.forEach((task,ti)=>newIds.set(task,`${pi}-${ti}`)));
+    return new Set(saved.map(id=>newIds.get(oldTasks.get(id))).filter(Boolean));
+  } catch { return new Set(); }
+}
+let completed=loadProgress();
+let currentFilter="all";
+function saveProgress(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify([...completed]));}catch{}}
+function escapeHtml(value){return value.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));}
+function render(){
+  const root=document.getElementById("roadmap");
+  root.innerHTML=phases.map((phase,phaseIndex)=>{
+    const phaseTasks=phase.tasks.map((task,taskIndex)=>{
+      const id=`${phaseIndex}-${taskIndex}`,done=completed.has(id);
+      const visible=currentFilter==="all"||(currentFilter==="done"&&done)||(currentFilter==="todo"&&!done);
+      return `<label class="task ${done?"done":""}" data-visible="${visible}"><input type="checkbox" data-id="${id}" ${done?"checked":""} aria-label="${escapeHtml(task)}"><span>${escapeHtml(task)}</span></label>`;
+    }).join("");
+    const doneCount=phase.tasks.filter((_,i)=>completed.has(`${phaseIndex}-${i}`)).length;
+    return `<section class="phase" data-phase="${phaseIndex}"><button class="phase-head" aria-expanded="true" type="button"><span class="phase-num">${String(phaseIndex+1).padStart(2,"0")}</span><span class="phase-heading"><strong>${escapeHtml(phase.title)}</strong><span class="phase-meta">${escapeHtml(phase.description)}</span></span><span class="phase-progress">${doneCount}/${phase.tasks.length}</span><span class="chevron" aria-hidden="true">⌄</span></button><div class="phase-body">${phaseTasks}</div></section>`;
+  }).join("");
+  root.querySelectorAll(".task").forEach(task=>task.hidden=task.dataset.visible!=="true");
+  root.querySelectorAll(".phase").forEach(phase=>phase.hidden=![...phase.querySelectorAll(".task")].some(task=>!task.hidden));
+  document.getElementById("empty").style.display=[...root.querySelectorAll(".phase")].some(phase=>!phase.hidden)?"none":"block";
+  updateProgress();
+}
+function updateProgress(){
+  const total=phases.reduce((sum,phase)=>sum+phase.tasks.length,0),count=completed.size,percent=Math.round(count/total*100);
+  document.getElementById("progressCount").textContent=`${count} of ${total} tasks completed`;
+  document.getElementById("percent").textContent=`${percent}%`;
+  document.getElementById("progressBar").style.width=`${percent}%`;
+  document.getElementById("progressTrack").setAttribute("aria-valuenow",percent);
+}
+document.getElementById("roadmap").addEventListener("change",event=>{
+  if(!event.target.matches('input[type="checkbox"][data-id]'))return;
+  const id=event.target.dataset.id;event.target.checked?completed.add(id):completed.delete(id);saveProgress();render();
+});
+document.getElementById("roadmap").addEventListener("click",event=>{
+  const head=event.target.closest(".phase-head");if(!head)return;
+  const phase=head.closest(".phase");phase.classList.toggle("collapsed");
+  head.setAttribute("aria-expanded",String(!phase.classList.contains("collapsed")));
+});
+document.querySelectorAll(".filter").forEach(button=>button.addEventListener("click",()=>{
+  currentFilter=button.dataset.filter;
+  document.querySelectorAll(".filter").forEach(item=>item.classList.toggle("active",item===button));render();
+}));
+document.getElementById("expandAll").addEventListener("click",()=>document.querySelectorAll(".phase").forEach(phase=>{
+  phase.classList.remove("collapsed");phase.querySelector(".phase-head").setAttribute("aria-expanded","true");
+}));
+document.getElementById("collapseAll").addEventListener("click",()=>document.querySelectorAll(".phase").forEach(phase=>{
+  phase.classList.add("collapsed");phase.querySelector(".phase-head").setAttribute("aria-expanded","false");
+}));
+document.getElementById("reset").addEventListener("click",()=>{
+  if(!confirm("Reset all checklist progress? This cannot be undone."))return;
+  completed.clear();saveProgress();render();
+});
+document.getElementById("print").addEventListener("click",()=>window.print());
+render();
+</script>
+</body>
+</html>
