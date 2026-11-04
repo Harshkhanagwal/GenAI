@@ -1,21 +1,24 @@
+
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel,ValidationError
+from pydantic import BaseModel
+
+from memory import save_history, load_history
 
 load_dotenv()
 
 
-
-class DevProfiie(BaseModel) :
-    skills : list[str]
-    experience : int | None
-    role : str | None
+class DevProfiie(BaseModel):
+    skills: list[str]
+    experience: int | None = None
+    role: str | None = None
 
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful AI study assistant."),
+    ("placeholder", "{history}"),
     ("human", "{question}"),
 ])
 
@@ -26,38 +29,18 @@ def main():
         temperature=0.7,
     )
 
-    # structured_model = model.with_structured_output(DevProfiie,  method="json_schema")
-
-    # chain = prompt | structured_model
-
-  
-    # try:
-    #     response = chain.invoke({
-    #         "question": (
-    #             "role is full stack genAI developer and works on React, Redux, Tailwind, Python, FastAPI, MongoDB. i have 3+ years of expirece "
-    #             "Do not invent data that is not mentioned."
-    #         )
-    #     })
-    #     print(response.skills)
-    #     print(response.experience)
-    #     print(response.role)          
-    # except ValidationError as err:
-    #     print("invalid data")
-    #     print(err)
-
-
-
-
     print("--------------------------------")
     print("GenAI Study Assistant - Ask me anything about programming.")
     print("--------------------------------")
     print("Type 'exit' to quit.")
     print("--------------------------------")
 
-    history = []
+    # Load previously saved conversation
+    history = load_history()
+
+    print(f"Loaded {len(history)} previous messages.")
 
     chain = prompt | model
-
 
     while True:
         question = input("You: ").strip()
@@ -69,37 +52,32 @@ def main():
         if not question:
             continue
 
-
         try:
-            # messages = prompt.format_messages(
-            #     history=history,
-            #     question=question,
-            # )
+            print("Assistant: ", end="", flush=True)
 
-            print("Assistant : ")
+            full_response = ""
 
-            full_response =""
+            for chunk in chain.stream({
+                "history": history,
+                "question": question
+            }):
+                content = chunk.content
 
-            try:
-                for chunk in chain.stream({
-                            "history": history,
-                            "question": question
-                     }):
-                    print(chunk.content, end="", flush=True)
-                    full_response += chunk.content
-                        # print(f"\nAssistant: {response.content}\n")
-            
-                history.append(HumanMessage(content=question))
-                history.append(AIMessage(content=full_response))
-            
-            except Exception as err:
-                print("Something went wrong while calling the AI.")
-                print("Error:", err)
-           
+                if isinstance(content, str):
+                    print(content, end="", flush=True)
+                    full_response += content
+
             print()
 
+            # Update conversation history
+            history.append(HumanMessage(content=question))
+            history.append(AIMessage(content=full_response))
+
+            # Persist updated conversation
+            save_history(history)
+
         except Exception as error:
-            print(f"Request failed: {error}")
+            print(f"\nRequest failed: {error}")
 
 
 if __name__ == "__main__":
